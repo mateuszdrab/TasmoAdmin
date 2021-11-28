@@ -3,10 +3,14 @@ name: main
 on:
   push:
     branches: [master]
+    #tags:
+    #- 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
   pull_request: ~
 
+
 env:
-  TARGET: raymondmm/tasmoadmin
+  # Docker target
+  TARGET: reloxx13/tasmoadmin
   QEMU_VERSION: v2.12.0
 
 jobs:
@@ -26,3 +30,33 @@ jobs:
       run: ./.docker/docker.sh build
     - name: Test docker images
       run: ./.docker/docker.sh test
+    - name: Test docker login
+      run:
+      - echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+  deploy:
+    # Only tags starting with v and ending with -beta
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+    # Deploy TasmoAdmin release to github
+    ## file: "./_releases/*" #upload files in here
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+  after_deploy:
+    needs: [deploy]
+    steps:
+    - run:
+      # Push Docker images to Docker Hub
+      # Docker Login
+      - echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      # Tag all images
+      ##- ./.docker/docker.sh tag
+      # Push all images
+      ##- ./.docker/docker.sh push
+      # Create and push manifest list
+      ##- ./.docker/docker.sh manifest-list
+      # Docker Logout
+      - docker logout
+
