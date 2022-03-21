@@ -27,8 +27,8 @@
 		    = $subdir = str_replace( "\\", "/", $subdir );
 	$subdir = $subdir == "//" ? "/" : $subdir;
 
-  if ($baseurl_from_env = getenv('TASMO_BASEURL')) {
-	  $subdir = $baseurl_from_env;
+    if ($baseurl_from_env = getenv('TASMO_BASEURL')) {
+		$subdir = $baseurl_from_env == "-" ? "" : $baseurl_from_env;
 	}
 
 	define( "_BASEURL_", $subdir );
